@@ -32,7 +32,7 @@
     spacing: 5mm,
   )
 
-  block(spacing: 0mm, text(weight: 600, size: 8.2mm, font: "Alimama FangYuanTi VF", name))
+  block(spacing: 0mm, text(weight: 600, size: 6mm, font: "Alimama FangYuanTi VF", name))
   stack(
     spacing: 3mm,
     block(text(size: 3.5mm, weight: 300, [所属队伍])),
@@ -48,7 +48,7 @@
 } else {
   let data = (
     group: "爱可可组",
-    name: "USB网卡",
+    name: "电源适配器",
     groupId: 2,
     assetId: 2,
   )
