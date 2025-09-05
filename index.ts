@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { $ } from 'bun'
 import lark from '@larksuiteoapi/node-sdk'
+import { console } from 'node:inspector'
 
 const appToken = 'JUdbb9kTBaZBXqsDciMcbwYBn8g'
 const tableId = 'tblFWDcFZgLQIePl'
@@ -80,12 +81,15 @@ async function fetchStudentData({ id, name, phone }: QueryCondition) {
     throw new Error('选手未组队')
   }
 
+  const hasSignedIn = Boolean(rawData['签到时间'])
+
   return {
     recordId,
     id: `https://h.115.zone/?id=${recordId}`,
     name: (rawData['姓名'] as { text: string }[])[0]!.text,
     school: (rawData['学校'] as { text: string }[])[0]!.text,
     group: groupData.value[0]!.text,
+    hasSignedIn,
   }
 }
 
@@ -110,18 +114,35 @@ async function signin(id: string) {
 }
 
 async function generateLabel(query: QueryCondition) {
+  console.log('正在查询选手数据', query.id ? `id: ${query.id}` : ``)
   const data = await fetchStudentData(query).catch((e) => {
     console.error(e.message)
     throw e
   })
+  console.log(
+    '查询到选手数据',
+    `姓名：${data.name}`,
+    `学校：${data.school}`,
+    `队伍：${data.group}`,
+    data.hasSignedIn ? '已签到' : '未签到',
+  )
+
   const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
     await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)}`
+    console.log('已生成选手标签', pdfFilePath)
     if (process.platform === 'win32') {
       await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath}`
+      console.log('选手标签打印任务已发送至标签打印机')
     }
   }
-  await Promise.all([generateAndPrint(), signin(data.recordId)])
+
+  if (data.hasSignedIn) {
+    await generateAndPrint()
+  } else {
+    await Promise.all([generateAndPrint(), signin(data.recordId)])
+  }
+  console.log('============================')
 }
 
 Bun.serve({
