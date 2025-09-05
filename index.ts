@@ -218,8 +218,12 @@ async function printAssetLabel(studentData: StudentData) {
         name: asset.name,
         groupId: studentData.groupId,
         assetId: asset.id,
-      })}`
+      })} &>> logs/asset-label.log`
       console.log('已生成资产标签，正在发送打印任务', pdfFilePath)
+      if (process.platform === 'win32') {
+        await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath} &>> logs/asset-label.log`
+        console.log(`${asset.name} 资产标签打印完成`)
+      }
     }
   }
   await Promise.all([generateAndPrint(), groupCheckIn(recordId)])
@@ -242,10 +246,10 @@ async function generateLabel(query: StudentQueryCondition) {
 
   const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
-    await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)}`
+    await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)} &>> logs/student-label.log`
     console.log('已生成选手标签，正在发送打印任务', pdfFilePath)
     if (process.platform === 'win32') {
-      await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath}`
+      await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath} &>> logs/student-label.log`
       console.log('选手标签打印完成')
     }
   }
