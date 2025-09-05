@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { $ } from 'bun'
 import lark from '@larksuiteoapi/node-sdk'
 
@@ -113,9 +114,9 @@ async function generateLabel(query: QueryCondition) {
     console.error(e.message)
     throw e
   })
-  const pdfFilePath = `'./outputs/${data.recordId}.pdf'`
+  const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
-    await $`typst compile label.typ ${pdfFilePath} --font-path ./fonts --input data=${JSON.stringify(data)}`
+    await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)}`
     if (process.platform === 'win32') {
       await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath}`
     }
