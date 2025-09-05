@@ -20,11 +20,11 @@
     spacing: 2mm,
   )
 
-  block(spacing: 0mm, text(weight: 600, size: 8.2mm, name))
+  block(spacing: 0mm, text(weight: 600, size: 8.2mm, font: "Alimama FangYuanTi VF", name))
   block(above: 3.4mm, below: 3.2mm, text(school))
   stack(
     spacing: 2mm,
-    block(text(size: 2.8mm, weight: 300, [队伍])),
+    block(text(size: 2.8mm, weight: 400, [队伍])),
     block(width: 8em, breakable: false, group),
   )
   place(right + bottom, qrcode(id, width: 16mm, quiet-zone: 0))

@@ -86,7 +86,7 @@ async function generateLabel(query: QueryCondition) {
     console.error(e.message)
     throw e
   })
-  await $`typst compile label.typ label.pdf --input data=${JSON.stringify(data)}`
+  await $`typst compile label.typ label.pdf --font-path ./fonts --input data=${JSON.stringify(data)}`
 }
 
 Bun.serve({
@@ -107,7 +107,6 @@ Bun.serve({
       return new Response(pdf, {
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': 'attachment; filename="label.pdf"',
         },
       })
     },
