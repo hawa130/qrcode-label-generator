@@ -131,10 +131,10 @@ async function generateLabel(query: QueryCondition) {
   const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
     await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)}`
-    console.log('已生成选手标签', pdfFilePath)
+    console.log('已生成选手标签，正在发送打印任务', pdfFilePath)
     if (process.platform === 'win32') {
       await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath}`
-      console.log('选手标签打印任务已发送至标签打印机')
+      console.log('选手标签打印完成')
     }
   }
 
