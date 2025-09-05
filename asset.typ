@@ -42,10 +42,15 @@
   place(right + bottom, ean8(groupId * 1000 + assetId))
 }
 
-#let data = (
-  group: "师兄会帮我调代码对不队",
-  name: "USB网卡",
-  groupId: 2,
-  assetId: 1,
-)
-#generate(group: data.group, name: data.name, groupId: data.groupId, assetId: data.assetId)
+#if "data" in sys.inputs {
+  let data = json.decode(sys.inputs.data)
+  generate(group: data.group, name: data.name, groupId: data.groupId, assetId: data.assetId)
+} else {
+  let data = (
+    group: "爱可可组",
+    name: "USB网卡",
+    groupId: 2,
+    assetId: 2,
+  )
+  generate(group: data.group, name: data.name, groupId: data.groupId, assetId: data.assetId)
+}
