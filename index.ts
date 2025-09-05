@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { $ } from 'bun'
 import lark from '@larksuiteoapi/node-sdk'
-import { console } from 'node:inspector'
+import { networkInterfaces } from 'node:os'
 
 const studentAppToken = 'JUdbb9kTBaZBXqsDciMcbwYBn8g'
 const studentTableId = 'tblFWDcFZgLQIePl'
@@ -220,8 +220,8 @@ async function printAssetLabel(studentData: StudentData) {
         groupId: studentData.groupId,
         assetId: asset.id,
       })} &>> logs/asset-label.log`
-      console.log('已生成资产标签，正在发送打印任务', pdfFilePath)
       if (process.platform === 'win32') {
+        console.log('已生成资产标签，正在发送打印任务', pdfFilePath)
         await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath} &>> logs/asset-label.log`
         console.log(`${asset.name} 资产标签打印完成`)
       }
@@ -249,8 +249,8 @@ async function generateLabel(query: StudentQueryCondition) {
     await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(
       data,
     )} &>> logs/student-label.log`
-    console.log('已生成选手标签，正在发送打印任务', pdfFilePath)
     if (process.platform === 'win32') {
+      console.log('已生成选手标签，正在发送打印任务', pdfFilePath)
       await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath} &>> logs/student-label.log`
       console.log('选手标签打印完成')
     }
@@ -264,7 +264,7 @@ async function generateLabel(query: StudentQueryCondition) {
   console.log('============================')
 }
 
-Bun.serve({
+const srv = Bun.serve({
   routes: {
     '/generate-label': async (req) => {
       const url = new URL(req.url)
@@ -301,3 +301,23 @@ Bun.serve({
     },
   },
 })
+
+function getLocalIps() {
+  const interfaces = networkInterfaces()
+  const addresses: string[] = []
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]!) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address)
+      }
+    }
+  }
+  return addresses
+}
+
+console.log(`Server started on port ${srv.port}\nAccess URLs:`)
+getLocalIps().forEach((ip) => {
+  console.log(`- http://${ip}:${srv.port}`)
+})
+console.log('Press Ctrl+C to stop the server')
+console.log('============================')
