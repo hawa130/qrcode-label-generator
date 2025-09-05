@@ -1,0 +1,15 @@
+{
+  "name": "qrcode-label-generator",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.55.0"
+  }
+}
