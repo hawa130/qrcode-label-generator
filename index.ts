@@ -54,11 +54,11 @@ type StudentData = {
   hasCheckedIn: boolean
 }
 
-async function fetchStudentData({ id, name, phone }: StudentQueryCondition): Promise<StudentData> {
+async function fetchStudentData({ id, name: queryName, phone }: StudentQueryCondition): Promise<StudentData> {
   const conditions: QueryCondition[] = []
 
   if (id) conditions.push({ field_name: '记录 ID', operator: 'is', value: [id] })
-  if (name) conditions.push({ field_name: '姓名', operator: 'is', value: [name] })
+  if (queryName) conditions.push({ field_name: '姓名', operator: 'is', value: [queryName] })
   if (phone) conditions.push({ field_name: '电话', operator: 'is', value: [phone] })
   if (conditions.length === 0) throw new Error('查询参数必须提供 id、name 或 phone 中的一个')
 
@@ -90,10 +90,11 @@ async function fetchStudentData({ id, name, phone }: StudentQueryCondition): Pro
     throw new Error('未找到选手信息')
   }
   const recordId = res.data?.items?.[0]!.record_id as string
+  const name = (rawData['姓名'] as { text: string }[])[0]!.text
 
   const groupData = rawData['队伍名'] as { type: number; value: { text: string }[] } | undefined
   if (!groupData) {
-    throw new Error('选手未组队')
+    throw new Error(`选手 ${name} 未组队`)
   }
 
   const groupId = (rawData['队伍编号'] as { type: number; value: number[] }).value[0] as number
@@ -102,7 +103,7 @@ async function fetchStudentData({ id, name, phone }: StudentQueryCondition): Pro
   return {
     recordId,
     id: `https://h.115.zone/?id=${recordId}`,
-    name: (rawData['姓名'] as { text: string }[])[0]!.text,
+    name,
     school: (rawData['学校'] as { text: string }[])[0]!.text,
     group: groupData.value[0]!.text,
     groupId,
@@ -227,7 +228,6 @@ async function printAssetLabel(studentData: StudentData) {
     }
   }
   await Promise.all([generateAndPrint(), groupCheckIn(recordId)])
-  console.log('============================')
 }
 
 async function generateLabel(query: StudentQueryCondition) {
@@ -246,7 +246,9 @@ async function generateLabel(query: StudentQueryCondition) {
 
   const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
-    await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(data)} &>> logs/student-label.log`
+    await $`typst compile label.typ ${pdfFilePath} --font-path fonts --input data=${JSON.stringify(
+      data,
+    )} &>> logs/student-label.log`
     console.log('已生成选手标签，正在发送打印任务', pdfFilePath)
     if (process.platform === 'win32') {
       await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath} &>> logs/student-label.log`

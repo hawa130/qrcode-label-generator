@@ -20,7 +20,7 @@
     spacing: 2mm,
   )
 
-  block(spacing: 0mm, text(weight: 600, size: 8.2mm, font: "Alimama FangYuanTi VF", name))
+  block(spacing: 0mm, text(weight: 600, size: 8.2mm, font: ("Alimama FangYuanTi VF", "HarmonyOS Sans SC"), name))
   block(above: 3.4mm, below: 3.2mm, text(school))
   stack(
     spacing: 2mm,

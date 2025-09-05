@@ -32,13 +32,13 @@
     spacing: 5mm,
   )
 
-  block(spacing: 0mm, text(weight: 600, size: 6mm, font: "Alimama FangYuanTi VF", name))
+  block(spacing: 0mm, text(weight: 600, size: 6mm, font: ("Alimama FangYuanTi VF", "HarmonyOS Sans SC"), name))
   stack(
     spacing: 3mm,
     block(text(size: 3.5mm, weight: 300, [所属队伍])),
     block(width: 6em, breakable: false, group),
   )
-  place(right + top, text(size: 6mm, pad-left(str(groupId), length: 2)))
+  place(right + top, text(size: 6mm, [#pad-left(str(groupId))-#pad-left(str(assetId))]))
   place(right + bottom, ean8(groupId * 1000 + assetId))
 }
 
@@ -49,7 +49,7 @@
   let data = (
     group: "爱可可组",
     name: "电源适配器",
-    groupId: 2,
+    groupId: 20,
     assetId: 2,
   )
   generate(group: data.group, name: data.name, groupId: data.groupId, assetId: data.assetId)
