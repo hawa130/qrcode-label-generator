@@ -95,7 +95,7 @@ async function fetchStudentData({ id, name, phone }: QueryCondition) {
 
 async function signin(id: string) {
   const client = createClient()
-
+  console.log('正在为选手签到')
   await client.bitable.v1.appTableRecord
     .update({
       path: {
@@ -111,6 +111,7 @@ async function signin(id: string) {
       console.error(JSON.stringify(e.response.data, null, 4))
       throw new Error('更新签到时间失败，请手动更新')
     })
+  console.log('选手签到成功')
 }
 
 async function generateLabel(query: QueryCondition) {
@@ -137,10 +138,10 @@ async function generateLabel(query: QueryCondition) {
     }
   }
 
-  if (data.hasSignedIn) {
-    await generateAndPrint()
-  } else {
+  if (!data.hasSignedIn) {
     await Promise.all([generateAndPrint(), signin(data.recordId)])
+  } else {
+    await generateAndPrint()
   }
   console.log('============================')
 }
