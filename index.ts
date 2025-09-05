@@ -87,6 +87,9 @@ async function generateLabel(query: QueryCondition) {
     throw e
   })
   await $`typst compile label.typ label.pdf --font-path ./fonts --input data=${JSON.stringify(data)}`
+  if (process.platform === 'win32') {
+    await $`SumatraPDF.exe -print-to GE350 -print-settings landscape label.pdf`
+  }
 }
 
 Bun.serve({
