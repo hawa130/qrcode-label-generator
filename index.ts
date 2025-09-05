@@ -6,6 +6,21 @@ const tableId = 'tblFWDcFZgLQIePl'
 
 type QueryCondition = { id?: string; name?: string; phone?: string }
 
+function createClient() {
+  if (!process.env.APP_ID || !process.env.APP_SECRET) {
+    throw new Error('APP_ID and APP_SECRET must be set in environment variables')
+  }
+
+  const client = new lark.Client({
+    appId: process.env.APP_ID,
+    appSecret: process.env.APP_SECRET,
+    disableTokenCache: false,
+    loggerLevel: lark.LoggerLevel.error,
+  })
+
+  return client
+}
+
 async function fetchStudentData({ id, name, phone }: QueryCondition) {
   const conditions: {
     field_name: string
@@ -30,16 +45,7 @@ async function fetchStudentData({ id, name, phone }: QueryCondition) {
   if (phone) conditions.push({ field_name: '电话', operator: 'is', value: [phone] })
   if (conditions.length === 0) throw new Error('查询参数必须提供 id、name 或 phone 中的一个')
 
-  if (!process.env.APP_ID || !process.env.APP_SECRET) {
-    throw new Error('APP_ID and APP_SECRET must be set in environment variables')
-  }
-
-  const client = new lark.Client({
-    appId: process.env.APP_ID,
-    appSecret: process.env.APP_SECRET,
-    disableTokenCache: false,
-    loggerLevel: lark.LoggerLevel.error,
-  })
+  const client = createClient()
 
   const res = await client.bitable.v1.appTableRecord
     .search({
@@ -66,7 +72,7 @@ async function fetchStudentData({ id, name, phone }: QueryCondition) {
   if (!rawData) {
     throw new Error('未找到选手信息')
   }
-  const recordId = res.data?.items?.[0]!.record_id
+  const recordId = res.data?.items?.[0]!.record_id as string
 
   const groupData = rawData['队伍名'] as { type: number; value: { text: string }[] } | undefined
   if (!groupData) {
@@ -74,11 +80,32 @@ async function fetchStudentData({ id, name, phone }: QueryCondition) {
   }
 
   return {
-    id: recordId,
+    recordId,
+    id: `https://h.115.zone/?id=${recordId}`,
     name: (rawData['姓名'] as { text: string }[])[0]!.text,
     school: (rawData['学校'] as { text: string }[])[0]!.text,
     group: groupData.value[0]!.text,
   }
+}
+
+async function signin(id: string) {
+  const client = createClient()
+
+  await client.bitable.v1.appTableRecord
+    .update({
+      path: {
+        app_token: appToken,
+        table_id: tableId,
+        record_id: id,
+      },
+      data: {
+        fields: { 签到时间: Date.now() },
+      },
+    })
+    .catch((e) => {
+      console.error(JSON.stringify(e.response.data, null, 4))
+      throw new Error('更新签到时间失败，请手动更新')
+    })
 }
 
 async function generateLabel(query: QueryCondition) {
@@ -86,10 +113,14 @@ async function generateLabel(query: QueryCondition) {
     console.error(e.message)
     throw e
   })
-  await $`typst compile label.typ label.pdf --font-path ./fonts --input data=${JSON.stringify(data)}`
-  if (process.platform === 'win32') {
-    await $`SumatraPDF.exe -print-to GE350 -print-settings landscape label.pdf`
+  const pdfFilePath = `'./outputs/${data.recordId}.pdf'`
+  const generateAndPrint = async () => {
+    await $`typst compile label.typ ${pdfFilePath} --font-path ./fonts --input data=${JSON.stringify(data)}`
+    if (process.platform === 'win32') {
+      await $`SumatraPDF.exe -print-to GE350 -print-settings landscape ${pdfFilePath}`
+    }
   }
+  await Promise.all([generateAndPrint(), signin(data.recordId)])
 }
 
 Bun.serve({
@@ -112,6 +143,20 @@ Bun.serve({
           'Content-Type': 'application/pdf',
         },
       })
+    },
+    '/trigger-generate-label': async (req) => {
+      const url = new URL(req.url)
+      const id = url.searchParams.get('id') || undefined
+      const name = url.searchParams.get('name') || undefined
+      const phone = url.searchParams.get('phone') || undefined
+
+      if (!id && !name && !phone) {
+        return new Response('查询参数必须提供 id、name 或 phone 中的一个', { status: 400 })
+      }
+
+      generateLabel({ id, name, phone })
+
+      return new Response('ok', { status: 200 })
     },
   },
 })
