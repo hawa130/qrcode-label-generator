@@ -236,13 +236,8 @@ async function generateLabel(query: StudentQueryCondition) {
     console.error(e.message)
     throw e
   })
-  console.log(
-    '查询到选手数据',
-    `姓名：${data.name}`,
-    `学校：${data.school}`,
-    `队伍：${data.group}`,
-    data.hasCheckedIn ? '已签到' : '未签到',
-  )
+  console.log('查询到选手数据', `姓名：${data.name}`, `学校：${data.school}`, `队伍：${data.group}`)
+  console.log(data.hasCheckedIn ? '选手已签到' : '选手未签到')
 
   const pdfFilePath = join('./outputs', `${data.recordId}.pdf`)
   const generateAndPrint = async () => {
@@ -259,7 +254,7 @@ async function generateLabel(query: StudentQueryCondition) {
   if (!data.hasCheckedIn) {
     await Promise.all([generateAndPrint(), studentCheckIn(data.recordId), printAssetLabel(data)])
   } else {
-    await generateAndPrint()
+    // await generateAndPrint()
   }
   console.log('============================')
 }
